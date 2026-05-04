@@ -36,13 +36,16 @@ app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   try {
     const count = await prisma.node.count();
+    console.log(`[Startup] Node count: ${count}`);
     if (count === 0) {
-      console.log('Seeding default data...');
+      console.log('[Startup] Database empty, seeding default data...');
       await seedDefaultData();
-      console.log('Default data seeded.');
+      console.log('[Startup] Default data seeded.');
+    } else {
+      console.log('[Startup] Database already has data, skipping seed.');
     }
   } catch (e) {
-    console.error('Auto-seed failed:', e);
+    console.error('[Startup] Auto-seed failed:', e);
   }
 });
 

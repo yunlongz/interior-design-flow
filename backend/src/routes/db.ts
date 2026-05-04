@@ -97,8 +97,11 @@ async function seedDefaultData() {
     { id: 21, name: '智能化', sortOrder: 21 },
     { id: 22, name: '机电', sortOrder: 22 },
   ];
+  console.log('[Seed] Creating phases...');
   await prisma.phase.createMany({ data: defaultPhases, skipDuplicates: true });
+  console.log('[Seed] Creating departments...');
   await prisma.department.createMany({ data: defaultDepts, skipDuplicates: true });
+  console.log('[Seed] Creating', defaultNodes.length, 'nodes...');
   for (const n of defaultNodes) {
     await prisma.node.upsert({
       where: { id: n.id },
@@ -106,13 +109,19 @@ async function seedDefaultData() {
       create: n,
     });
   }
+  console.log('[Seed] Creating', defaultConnections.length, 'connections...');
   for (const c of defaultConnections) {
-    await prisma.connection.upsert({
-      where: { fromNode_toNode: { fromNode: c.fromNode, toNode: c.toNode } },
-      update: {},
-      create: c,
-    });
+    try {
+      await prisma.connection.upsert({
+        where: { fromNode_toNode: { fromNode: c.fromNode, toNode: c.toNode } },
+        update: {},
+        create: c,
+      });
+    } catch (err) {
+      console.error('[Seed] Connection upsert failed for', c.fromNode, '->', c.toNode, ':', err);
+    }
   }
+  console.log('[Seed] Done');
 }
 
 export { seedDefaultData };
