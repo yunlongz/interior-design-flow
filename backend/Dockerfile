@@ -1,4 +1,4 @@
-FROM node:24-alpine AS builder
+FROM docker.m.daocloud.io/library/node:24-alpine AS builder
 
 WORKDIR /app
 COPY package*.json ./
@@ -7,7 +7,7 @@ COPY . .
 RUN npx prisma generate
 RUN npm run build
 
-FROM node:24-alpine
+FROM docker.m.daocloud.io/library/node:24-alpine
 
 WORKDIR /app
 ENV NODE_ENV=production
