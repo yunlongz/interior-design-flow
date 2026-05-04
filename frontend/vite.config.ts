@@ -3,7 +3,6 @@ import vue from '@vitejs/plugin-vue'
 import legacy from '@vitejs/plugin-legacy'
 import { resolve } from 'path'
 
-// https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
   base: mode === 'production' ? './' : '/',
   plugins: [
@@ -19,12 +18,17 @@ export default defineConfig(({ mode }) => ({
       '@': resolve(__dirname, 'src'),
     },
   },
-  optimizeDeps: {
-    include: ['sql.js'],
-  },
   build: {
     cssTarget: 'chrome75',
     outDir: 'dist',
     assetsInlineLimit: 0,
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
   },
 }))

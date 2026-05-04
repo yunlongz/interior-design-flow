@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Phase {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  nodes     Node[]
+
+  @@map("phases")
+}
+
+model Department {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  nodes     Node[]
+
+  @@map("departments")
+}
+
+model Node {
+  id        String   @id
+  title     String
+  type      String
+  detail    String?
+  phaseId   Int      @map("phase_id")
+  deptId    Int      @map("dept_id")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  phase      Department @relation(fields: [deptId], references: [id], map: "nodes_dept_id_fkey")
+  department Phase      @relation(fields: [phaseId], references: [id], map: "nodes_phase_id_fkey")
+  upstream    Connection[] @relation("Upstream")
+  downstream  Connection[] @relation("Downstream")
+
+  @@map("nodes")
+}
+
+model Connection {
+  id          Int      @id @default(autoincrement())
+  fromNode    String   @map("from_node")
+  toNode      String   @map("to_node")
+  type        String   @default("流程")
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  from Node @relation("Upstream", fields: [fromNode], references: [id], map: "connections_from_node_fkey")
+  to   Node @relation("Downstream", fields: [toNode], references: [id], map: "connections_to_node_fkey")
+
+  @@unique([fromNode, toNode], map: "connections_from_node_to_node_key")
+  @@map("connections")
+}

@@ -48,7 +48,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useUiStore } from '@/stores/uiStore'
 import { useFlowStore } from '@/stores/flowStore'
-import { dbManager } from '@/db/DatabaseManager'
+import client from '@/api/client.js'
 
 const uiStore = useUiStore()
 const flowStore = useFlowStore()
@@ -117,12 +117,12 @@ function resetView() {
 
 async function exportData() {
   try {
-    const data = await dbManager.exportDb()
-    const blob = new Blob([data.buffer as ArrayBuffer], { type: 'application/octet-stream' })
+    const { data } = await client.get('/db/export')
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `interior-design-flow-${new Date().toISOString().slice(0, 10)}.db`
+    a.download = `interior-design-flow-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(url)
     uiStore.showToast('数据已导出', 'success')
@@ -140,13 +140,13 @@ async function handleImport(e: Event) {
   const file = files && files[0]
   if (!file) return
   try {
-    const buffer = await file.arrayBuffer()
-    const data = new Uint8Array(buffer)
-    await dbManager.importDb(data)
+    const text = await file.text()
+    const data = JSON.parse(text)
+    await client.post('/db/import', data)
     await flowStore.reloadAll()
     uiStore.showToast('数据已导入', 'success')
   } catch (err) {
-    uiStore.showToast('导入失败，文件可能损坏', 'warn')
+    uiStore.showToast('导入失败，文件格式错误', 'warn')
   }
   if (importInput.value) importInput.value.value = ''
 }

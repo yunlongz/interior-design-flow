@@ -166,12 +166,11 @@
 import { computed, ref, watch } from 'vue'
 import { useUiStore } from '@/stores/uiStore'
 import { useFlowStore } from '@/stores/flowStore'
-import { ConnectionDao } from '@/db/dao'
 import type { ConnectionFull, FlowNodeFull } from '@/types'
+import client from '@/api/client.js'
 
 const uiStore = useUiStore()
 const flowStore = useFlowStore()
-const connDao = new ConnectionDao()
 
 const activeNode = computed(() => {
   if (!uiStore.activeNodeId) return null
@@ -196,15 +195,26 @@ function typeLabel(type: string): string {
   return map[type] || type
 }
 
-const upstream = computed<ConnectionFull[]>(() => {
-  if (!uiStore.activeNodeId) return []
-  return connDao.getByNode(uiStore.activeNodeId).upstream
-})
+const upstream = ref<ConnectionFull[]>([])
+const downstream = ref<ConnectionFull[]>([])
 
-const downstream = computed<ConnectionFull[]>(() => {
-  if (!uiStore.activeNodeId) return []
-  return connDao.getByNode(uiStore.activeNodeId).downstream
-})
+async function loadConnections() {
+  if (!uiStore.activeNodeId) {
+    upstream.value = []
+    downstream.value = []
+    return
+  }
+  try {
+    const { data } = await client.get(`/connections/node/${uiStore.activeNodeId}`)
+    upstream.value = data.upstream
+    downstream.value = data.downstream
+  } catch {
+    upstream.value = []
+    downstream.value = []
+  }
+}
+
+watch(() => uiStore.activeNodeId, loadConnections, { immediate: true })
 
 // 详情编辑
 const detailText = ref('')

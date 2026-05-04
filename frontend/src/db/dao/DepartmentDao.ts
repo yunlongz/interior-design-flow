@@ -1,50 +1,36 @@
-import { dbManager } from '../DatabaseManager'
-import type { Department } from '@/types'
+import client from '@/api/client.js';
+import type { Department } from '@/types';
 
 export class DepartmentDao {
-  getAll(): Department[] {
-    const result = dbManager.exec('SELECT id, name, sort_order FROM departments ORDER BY sort_order')
-    if (!result.length) return []
-    return result[0].values.map((row) => ({
-      id: row[0] as number,
-      name: row[1] as string,
-      sortOrder: row[2] as number,
-    }))
+  async getAll(): Promise<Department[]> {
+    const { data } = await client.get('/departments');
+    return data;
   }
 
-  getById(id: number): Department | null {
-    const result = dbManager.exec(`SELECT id, name, sort_order FROM departments WHERE id = ${id}`)
-    if (!result.length || !result[0].values.length) return null
-    const row = result[0].values[0]
-    return {
-      id: row[0] as number,
-      name: row[1] as string,
-      sortOrder: row[2] as number,
+  async getById(id: number): Promise<Department | null> {
+    try {
+      const { data } = await client.get(`/departments/${id}`);
+      return data;
+    } catch {
+      return null;
     }
   }
 
-  create(name: string, sortOrder: number): number {
-    const escaped = name.replace(/'/g, "''")
-    dbManager.runSql(`
-      INSERT INTO departments (name, sort_order) VALUES ('${escaped}', ${sortOrder})
-    `)
-    const result = dbManager.exec('SELECT last_insert_rowid() as id')
-    return result[0].values[0][0] as number
+  async create(name: string, sortOrder: number): Promise<number> {
+    const { data } = await client.post('/departments', { name, sortOrder });
+    return data.id;
   }
 
-  update(id: number, name: string, sortOrder: number): void {
-    const escaped = name.replace(/'/g, "''")
-    dbManager.runSql(`
-      UPDATE departments SET name = '${escaped}', sort_order = ${sortOrder} WHERE id = ${id}
-    `)
+  async update(id: number, name: string, sortOrder: number): Promise<void> {
+    await client.put(`/departments/${id}`, { name, sortOrder });
   }
 
-  delete(id: number): void {
-    dbManager.runSql(`DELETE FROM departments WHERE id = ${id}`)
+  async delete(id: number): Promise<void> {
+    await client.delete(`/departments/${id}`);
   }
 
-  getNodeCount(id: number): number {
-    const result = dbManager.exec(`SELECT COUNT(*) FROM nodes WHERE dept_id = ${id}`)
-    return (result[0] && result[0].values && result[0].values[0] && result[0].values[0][0]) as number || 0
+  async getNodeCount(id: number): Promise<number> {
+    const { data } = await client.get(`/departments/${id}/node-count`);
+    return data.count;
   }
 }

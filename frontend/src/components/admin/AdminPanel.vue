@@ -90,15 +90,12 @@
 import { ref, computed } from 'vue'
 import { useFlowStore } from '@/stores/flowStore'
 import { useUiStore } from '@/stores/uiStore'
-import { PhaseDao, DepartmentDao, NodeDao } from '@/db/dao'
 import DataTable from './DataTable.vue'
 import DataForm from './DataForm.vue'
+import client from '@/api/client.js'
 
 const flowStore = useFlowStore()
 const uiStore = useUiStore()
-const phaseDao = new PhaseDao()
-const deptDao = new DepartmentDao()
-const nodeDao = new NodeDao()
 
 const show = defineModel<boolean>('show', { default: false })
 const activeTab = ref('phases')
@@ -259,22 +256,26 @@ async function handleFormSubmit(data: Record<string, any>) {
 }
 
 async function deletePhase(item: any) {
-  const count = phaseDao.getNodeCount(item.id)
-  if (count > 0) {
-    uiStore.showToast(`该阶段下还有 ${count} 个节点，无法删除`, 'warn')
-    return
-  }
+  try {
+    const { data } = await client.get(`/phases/${item.id}/node-count`)
+    if (data.count > 0) {
+      uiStore.showToast(`该阶段下还有 ${data.count} 个节点，无法删除`, 'warn')
+      return
+    }
+  } catch { /* ignore */ }
   if (!confirm(`确定删除阶段「${item.name}」吗？`)) return
   await flowStore.deletePhase(item.id)
   uiStore.showToast('阶段已删除', 'success')
 }
 
 async function deleteDept(item: any) {
-  const count = deptDao.getNodeCount(item.id)
-  if (count > 0) {
-    uiStore.showToast(`该部门下还有 ${count} 个节点，无法删除`, 'warn')
-    return
-  }
+  try {
+    const { data } = await client.get(`/departments/${item.id}/node-count`)
+    if (data.count > 0) {
+      uiStore.showToast(`该部门下还有 ${data.count} 个节点，无法删除`, 'warn')
+      return
+    }
+  } catch { /* ignore */ }
   if (!confirm(`确定删除部门「${item.name}」吗？`)) return
   await flowStore.deleteDept(item.id)
   uiStore.showToast('部门已删除', 'success')
