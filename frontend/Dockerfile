@@ -1,5 +1,5 @@
 # 阶段一：构建
-FROM node:24-alpine AS builder
+FROM docker.m.daocloud.io/library/node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ COPY . .
 RUN npm run build
 
 # 阶段二：运行（Nginx 托管静态文件）
-FROM nginx:alpine
+FROM docker.m.daocloud.io/library/nginx:alpine
 
 # 自定义 nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
