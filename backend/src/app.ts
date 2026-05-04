@@ -35,6 +35,8 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   try {
+    await prisma.$connect();
+    console.log('[Startup] Prisma connected to database');
     const count = await prisma.node.count();
     console.log(`[Startup] Node count: ${count}`);
     if (count === 0) {
@@ -44,8 +46,8 @@ app.listen(PORT, async () => {
     } else {
       console.log('[Startup] Database already has data, skipping seed.');
     }
-  } catch (e) {
-    console.error('[Startup] Auto-seed failed:', e);
+  } catch (e: any) {
+    console.error('[Startup] Auto-seed failed:', e?.message || e);
   }
 });
 

@@ -1,5 +1,5 @@
 FROM docker.m.daocloud.io/library/node:24-alpine AS builder
-
+RUN apk add --no-cache openssl
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
@@ -8,7 +8,7 @@ RUN npx prisma generate
 RUN npm run build
 
 FROM docker.m.daocloud.io/library/node:24-alpine
-
+RUN apk add --no-cache openssl
 WORKDIR /app
 ENV NODE_ENV=production
 COPY package*.json ./
