@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: interior-design-flow:latest
+    image: interior-design-flow:v1.0.2
     container_name: interior-design-flow
     ports:
       - "18080:80"
