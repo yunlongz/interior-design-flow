@@ -5,6 +5,8 @@ import departmentRoutes from './routes/departments.js';
 import nodeRoutes from './routes/nodes.js';
 import connectionRoutes from './routes/connections.js';
 import dbRoutes from './routes/db.js';
+import { seedDefaultData } from './routes/db.js';
+import { prisma } from './lib/prisma.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,8 +32,18 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
   });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
+  try {
+    const count = await prisma.node.count();
+    if (count === 0) {
+      console.log('Seeding default data...');
+      await seedDefaultData();
+      console.log('Default data seeded.');
+    }
+  } catch (e) {
+    console.error('Auto-seed failed:', e);
+  }
 });
 
 export default app;

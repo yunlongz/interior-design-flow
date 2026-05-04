@@ -4,6 +4,7 @@ import * as phaseService from '../services/phaseService.js';
 import * as deptService from '../services/departmentService.js';
 import * as nodeService from '../services/nodeService.js';
 import * as connService from '../services/connectionService.js';
+import { defaultNodes, defaultConnections } from '../seedData.js';
 
 const router = Router();
 
@@ -96,8 +97,23 @@ async function seedDefaultData() {
     { id: 21, name: '智能化', sortOrder: 21 },
     { id: 22, name: '机电', sortOrder: 22 },
   ];
-  await prisma.phase.createMany({ data: defaultPhases });
-  await prisma.department.createMany({ data: defaultDepts });
+  await prisma.phase.createMany({ data: defaultPhases, skipDuplicates: true });
+  await prisma.department.createMany({ data: defaultDepts, skipDuplicates: true });
+  for (const n of defaultNodes) {
+    await prisma.node.upsert({
+      where: { id: n.id },
+      update: {},
+      create: n,
+    });
+  }
+  for (const c of defaultConnections) {
+    await prisma.connection.upsert({
+      where: { fromNode_toNode: { fromNode: c.fromNode, toNode: c.toNode } },
+      update: {},
+      create: c,
+    });
+  }
 }
 
+export { seedDefaultData };
 export default router;
