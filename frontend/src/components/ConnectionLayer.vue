@@ -220,7 +220,7 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   pointer-events: none;
-  z-index: 5;
+  z-index: 100;
   overflow: visible;
 }
 .connections-svg path {

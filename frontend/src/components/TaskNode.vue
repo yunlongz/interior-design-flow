@@ -80,6 +80,17 @@ function handleClick() {
     uiStore.setActiveNode(null)
   } else {
     uiStore.setActiveNode(props.node.id)
+    // 自动展开当前节点及上下游节点所在部门
+    uiStore.addDeptActive(props.node.deptId)
+    for (const c of flowStore.connections) {
+      if (c.fromNode === props.node.id) {
+        const toNode = flowStore.nodeMap.get(c.toNode)
+        if (toNode) uiStore.addDeptActive(toNode.deptId)
+      } else if (c.toNode === props.node.id) {
+        const fromNode = flowStore.nodeMap.get(c.fromNode)
+        if (fromNode) uiStore.addDeptActive(fromNode.deptId)
+      }
+    }
   }
 }
 

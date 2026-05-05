@@ -27,6 +27,10 @@ export const useUiStore = defineStore('ui', () => {
     }
   }
 
+  function addDeptActive(deptId: number) {
+    activeDeptIds.value.add(deptId)
+  }
+
   function setAllDeptsActive(ids: number[]) {
     activeDeptIds.value = new Set(ids)
   }
@@ -81,6 +85,7 @@ export const useUiStore = defineStore('ui', () => {
     setActiveNode,
     setSelectedPhase,
     toggleDeptActive,
+    addDeptActive,
     setAllDeptsActive,
     togglePhaseCollapse,
     toggleDeptCollapse,
