@@ -77,7 +77,6 @@ function getNodes(deptId: number) {
   background: white;
   border-radius: 8px;
   box-shadow: var(--shadow);
-  overflow: hidden;
   transition: margin 0.3s;
 }
 .phase-block.collapsed {
@@ -97,6 +96,10 @@ function getNodes(deptId: number) {
   position: sticky;
   top: 0;
   z-index: 10;
+  border-radius: 8px 8px 0 0;
+}
+.phase-block.collapsed .phase-header {
+  border-radius: 8px;
 }
 .phase-header .toggle-icon {
   width: 20px;
@@ -127,5 +130,6 @@ function getNodes(deptId: number) {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  border-radius: 0 0 8px 8px;
 }
 </style>

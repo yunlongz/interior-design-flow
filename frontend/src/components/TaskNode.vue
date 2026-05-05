@@ -133,6 +133,10 @@ async function handleDelete() {
   font-size: 12px;
   line-height: 1.5;
   user-select: none;
+  z-index: 1;
+}
+.task-node:hover {
+  z-index: 30;
 }
 .task-node:hover {
   box-shadow: var(--shadow-lg);
