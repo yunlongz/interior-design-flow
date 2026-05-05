@@ -105,12 +105,10 @@ onMounted(() => {
       pull: true,
       put: true,
     },
-    animation: 150,
+    animation: 100,
     ghostClass: 'sort-ghost',
     dragClass: 'sort-drag',
     chosenClass: 'sort-chosen',
-    forceFallback: true,
-    fallbackClass: 'sort-fallback',
     onEnd: (evt) => {
       const nodeId = evt.item.dataset.id
       if (!nodeId) return

@@ -137,21 +137,18 @@ async function handleDelete() {
   pointer-events: none;
 }
 .sort-ghost {
-  opacity: 0.5;
+  opacity: 0.45;
   background: #ebf8ff;
   border: 2px dashed var(--primary);
 }
 .sort-chosen {
   cursor: grabbing;
+  opacity: 0.6;
 }
 .sort-drag {
   opacity: 0.95;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-  transform: scale(1.02);
-}
-.sort-fallback {
-  opacity: 0.95;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  transform: scale(1.03);
 }
 .task-node.node-highlighted {
   background: #fffaf0;
