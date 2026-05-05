@@ -16,9 +16,8 @@
               v-for="phase in visiblePhases"
               :key="phase.id"
               :phase="phase"
-              @dragstart="dragSrcId = $event"
-              @dragend="dragSrcId = null"
-              @drop="handleDrop"
+              @move="handleMove"
+              @reorder="handleReorder"
             />
           </div>
         </div>
@@ -61,7 +60,6 @@ const flowStore = useFlowStore()
 const uiStore = useUiStore()
 
 const canvasRef = ref<HTMLElement>()
-const dragSrcId = ref<string | null>(null)
 const loadError = ref('')
 const showAdmin = ref(false)
 
@@ -99,20 +97,21 @@ function handleCanvasClick(e: MouseEvent) {
   }
 }
 
-async function handleDrop(phaseId: number, deptId: number, ids: string[]) {
-  const srcId = dragSrcId.value || document.body.dataset.dragSrcId || null
-  if (!srcId) return
-  const srcNode = flowStore.nodeMap.get(srcId)
+async function handleMove(nodeId: string, phaseId: number, deptId: number, ids: string[]) {
+  const srcNode = flowStore.nodeMap.get(nodeId)
   if (!srcNode) return
   // 跨阶段或跨部门时先移动节点
   if (srcNode.phaseId !== phaseId || srcNode.deptId !== deptId) {
-    await flowStore.moveNode(srcId, phaseId, deptId)
+    await flowStore.moveNode(nodeId, phaseId, deptId)
   }
   // 更新目标位置的排序
   await flowStore.updateSortOrder(phaseId, deptId, ids)
-  dragSrcId.value = null
-  delete document.body.dataset.dragSrcId
   uiStore.showToast('位置已调整并保存', 'success')
+}
+
+async function handleReorder(phaseId: number, deptId: number, ids: string[]) {
+  await flowStore.updateSortOrder(phaseId, deptId, ids)
+  uiStore.showToast('排序已更新', 'success')
 }
 
 onMounted(async () => {

@@ -1,7 +1,7 @@
 <template>
   <div
     :class="['dept-lane', { collapsed: isCollapsed }]"
-    :data-dept="deptName"
+    :data-dept="deptId"
     :data-phase="phaseId"
   >
     <div class="dept-label" @click="uiStore.toggleDeptCollapse(phaseId, deptId)">
@@ -12,11 +12,8 @@
       </span>
     </div>
     <div
+      ref="laneRef"
       class="lane-tasks"
-      :class="{ 'drag-over': isDragOver }"
-      @dragover="handleDragOver"
-      @dragleave="isDragOver = false"
-      @drop="handleDrop"
     >
       <TaskNode
         v-for="node in nodes"
@@ -49,11 +46,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, watch } from 'vue'
+import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue'
 import type { FlowNodeFull } from '@/types'
 import { useUiStore } from '@/stores/uiStore'
 import { useFlowStore } from '@/stores/flowStore'
 import TaskNode from './TaskNode.vue'
+import Sortable from 'sortablejs'
 
 const props = defineProps<{
   phaseId: number
@@ -63,15 +61,14 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  dragstart: [nodeId: string]
-  dragend: []
-  drop: [idsInOrder: string[]]
+  move: [nodeId: string, phaseId: number, deptId: number, ids: string[]]
+  reorder: [phaseId: number, deptId: number, ids: string[]]
 }>()
 
 const uiStore = useUiStore()
 const flowStore = useFlowStore()
 
-const isDragOver = ref(false)
+const laneRef = ref<HTMLElement>()
 const showAddForm = ref(false)
 const newNodeTitle = ref('')
 const newNodeType = ref('task')
@@ -100,56 +97,43 @@ async function confirmAdd() {
   uiStore.showToast('节点已添加', 'success')
 }
 
-function handleDragOver(e: DragEvent) {
-  e.preventDefault()
-  const srcId = (e.dataTransfer && e.dataTransfer.getData('text/plain')) || document.body.dataset.dragSrcId
-  if (!srcId) return
-  const srcNode = flowStore.nodeMap.get(srcId)
-  if (!srcNode) return
-  isDragOver.value = true
+let sortable: Sortable | null = null
 
-  const container = e.currentTarget as HTMLElement
-  const afterElement = getDragAfterElement(container, e.clientX, e.clientY)
-  const draggable = document.querySelector(`[data-id="${srcId}"]`)
-  if (!draggable) return
-  if (afterElement == null) {
-    container.appendChild(draggable)
-  } else {
-    container.insertBefore(draggable, afterElement)
-  }
-}
-
-function handleDrop(e: DragEvent) {
-  e.preventDefault()
-  isDragOver.value = false
-  const srcId = (e.dataTransfer && e.dataTransfer.getData('text/plain')) || document.body.dataset.dragSrcId
-  if (!srcId) return
-  const container = e.currentTarget as HTMLElement
-  const ids = Array.from(container.querySelectorAll('.task-node')).map(
-    (el) => (el as HTMLElement).dataset.id!
-  )
-  emit('drop', ids)
-}
-
-function getDragAfterElement(container: HTMLElement, x: number, y: number) {
-  const draggableElements = [
-    ...container.querySelectorAll('.task-node:not(.sort-dragging)'),
-  ] as HTMLElement[]
-
-  return draggableElements.reduce(
-    (closest, child) => {
-      const box = child.getBoundingClientRect()
-      const offsetX = x - (box.left + box.width / 2)
-      const offsetY = y - (box.top + box.height / 2)
-      const dist = Math.sqrt(offsetX * offsetX + offsetY * offsetY)
-      if (dist < closest.dist) {
-        return { dist, element: child }
-      }
-      return closest
+onMounted(() => {
+  if (!laneRef.value) return
+  sortable = new Sortable(laneRef.value, {
+    group: {
+      name: 'nodes',
+      pull: true,
+      put: true,
     },
-    { dist: Number.POSITIVE_INFINITY, element: null as HTMLElement | null }
-  ).element
-}
+    animation: 150,
+    ghostClass: 'sort-ghost',
+    dragClass: 'sort-drag',
+    chosenClass: 'sort-chosen',
+    forceFallback: true,
+    fallbackClass: 'sort-fallback',
+    onEnd: (evt) => {
+      const nodeId = evt.item.dataset.id
+      if (!nodeId) return
+      const ids = Array.from(evt.to.querySelectorAll('.task-node')).map(
+        (el) => (el as HTMLElement).dataset.id!
+      )
+      if (evt.from !== evt.to) {
+        const toLane = evt.to.closest('.dept-lane') as HTMLElement | null
+        const toPhaseId = Number(toLane?.dataset.phase)
+        const toDeptId = Number(toLane?.dataset.dept)
+        emit('move', nodeId, toPhaseId, toDeptId, ids)
+      } else {
+        emit('reorder', props.phaseId, props.deptId, ids)
+      }
+    },
+  })
+})
+
+onUnmounted(() => {
+  sortable?.destroy()
+})
 </script>
 
 <style scoped>

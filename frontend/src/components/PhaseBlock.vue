@@ -17,9 +17,8 @@
         :dept-id="deptId"
         :dept-name="getDeptName(deptId)"
         :nodes="getNodes(deptId)"
-        @dragstart="$emit('dragstart', $event)"
-        @dragend="$emit('dragend')"
-        @drop="(ids) => $emit('drop', phase.id, deptId, ids)"
+        @move="(nodeId, toPhaseId, toDeptId, ids) => $emit('move', nodeId, toPhaseId, toDeptId, ids)"
+        @reorder="(p, d, ids) => $emit('reorder', p, d, ids)"
       />
     </div>
   </div>
@@ -37,9 +36,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  dragstart: [nodeId: string]
-  dragend: []
-  drop: [phaseId: number, deptId: number, ids: string[]]
+  move: [nodeId: string, phaseId: number, deptId: number, ids: string[]]
+  reorder: [phaseId: number, deptId: number, ids: string[]]
 }>()
 
 const uiStore = useUiStore()

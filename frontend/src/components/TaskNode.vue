@@ -8,16 +8,12 @@
         related: isRelated,
         dimmed: isDimmed,
         expanded: isExpanded,
-        'sort-dragging': isDragging,
         'node-highlighted': props.node.isHighlighted,
       },
     ]"
     :data-id="node.id"
     :data-dept="node.deptName"
-    draggable="true"
     @click="handleClick"
-    @dragstart="handleDragStart"
-    @dragend="handleDragEnd"
   >
     <div class="node-type-badge"></div>
     <button class="node-delete-btn" @click.stop="handleDelete">×</button>
@@ -47,17 +43,13 @@ const props = defineProps<{
   node: FlowNodeFull
 }>()
 
-const emit = defineEmits<{
-  dragstart: [nodeId: string]
-  dragend: []
-}>()
+
 
 const uiStore = useUiStore()
 const flowStore = useFlowStore()
 const { activeNodeId } = storeToRefs(uiStore)
 
 const isExpanded = ref(false)
-const isDragging = ref(false)
 
 const isActive = computed(() => activeNodeId.value === props.node.id)
 
@@ -96,20 +88,6 @@ function handleClick() {
       }
     }
   }
-}
-
-function handleDragStart(e: DragEvent) {
-  isDragging.value = true
-  emit('dragstart', props.node.id)
-  e.dataTransfer!.effectAllowed = 'move'
-  e.dataTransfer!.setData('text/plain', props.node.id)
-  document.body.dataset.dragSrcId = props.node.id
-}
-
-function handleDragEnd() {
-  isDragging.value = false
-  emit('dragend')
-  delete document.body.dataset.dragSrcId
 }
 
 async function handleDelete() {
@@ -158,11 +136,22 @@ async function handleDelete() {
   filter: grayscale(0.6);
   pointer-events: none;
 }
-.task-node.sort-dragging {
-  opacity: 0.3;
-  cursor: grabbing;
-  border: 2px dashed var(--primary);
+.sort-ghost {
+  opacity: 0.5;
   background: #ebf8ff;
+  border: 2px dashed var(--primary);
+}
+.sort-chosen {
+  cursor: grabbing;
+}
+.sort-drag {
+  opacity: 0.95;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  transform: scale(1.02);
+}
+.sort-fallback {
+  opacity: 0.95;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
 }
 .task-node.node-highlighted {
   background: #fffaf0;
