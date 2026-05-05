@@ -5,10 +5,10 @@
         <path d="M0,0 L0,6 L9,3 z" fill="#a0aec0" />
       </marker>
       <marker id="arrow-highlight" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
-        <path d="M0,0 L0,6 L9,3 z" fill="#c53030" />
+        <path d="M0,0 L0,6 L9,3 z" fill="#e53e3e" />
       </marker>
       <marker id="arrow-upstream" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
-        <path d="M0,0 L0,6 L9,3 z" fill="#2c5282" />
+        <path d="M0,0 L0,6 L9,3 z" fill="#3182ce" />
       </marker>
     </defs>
     <path
@@ -85,10 +85,14 @@ const paths = computed(() => {
     const x2 = toRect.left - containerRect.left
     const y2 = toRect.top + toRect.height / 2 - containerRect.top
 
-    const cp1x = x1 + Math.max(60, (x2 - x1) * 0.4)
-    const cp1y = y1
-    const cp2x = x2 - Math.max(60, (x2 - x1) * 0.4)
-    const cp2y = y2
+    const dx = x2 - x1
+    const dy = y2 - y1
+    const dist = Math.sqrt(dx * dx + dy * dy)
+    const tension = Math.min(dist * 0.45, 180)
+    const cp1x = x1 + tension
+    const cp1y = y1 + dy * 0.15
+    const cp2x = x2 - tension
+    const cp2y = y2 - dy * 0.15
     const d = `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`
 
     let isHighlighted = false
@@ -109,19 +113,19 @@ const paths = computed(() => {
     let className = activeId ? 'visible' : ''
 
     if (isHighlighted) {
-      stroke = '#c53030'
+      stroke = '#e53e3e'
       strokeWidth = 3
       markerEnd = 'url(#arrow-highlight)'
       className = 'visible highlighted'
     } else if (isUpstream) {
-      stroke = '#2c5282'
+      stroke = '#3182ce'
       strokeWidth = 2.5
       markerEnd = 'url(#arrow-upstream)'
       className = 'visible upstream'
     } else if (activeId) {
       className = ''
     } else if (isHovered) {
-      stroke = '#2c5282'
+      stroke = '#3182ce'
       strokeWidth = 3
     }
 
@@ -227,17 +231,18 @@ onUnmounted(() => {
   filter: drop-shadow(0 0 3px rgba(30, 58, 95, 0.3));
 }
 .connections-svg path.highlighted {
-  stroke: var(--accent) !important;
+  stroke: #e53e3e !important;
   stroke-width: 3 !important;
   opacity: 1 !important;
-  filter: drop-shadow(0 0 4px rgba(197, 48, 48, 0.4));
-  animation: dash 1s linear infinite;
-  stroke-dasharray: 8 4;
+  filter: drop-shadow(0 0 6px rgba(229, 62, 62, 0.5));
+  animation: dash 1.2s linear infinite;
+  stroke-dasharray: 10 5;
 }
 .connections-svg path.upstream {
-  stroke: var(--primary-light) !important;
+  stroke: #3182ce !important;
   stroke-width: 2.5 !important;
   opacity: 1 !important;
+  filter: drop-shadow(0 0 5px rgba(49, 130, 206, 0.45));
 }
 
 .conn-tooltip {
