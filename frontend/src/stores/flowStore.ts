@@ -136,7 +136,7 @@ export const useFlowStore = defineStore('flow', () => {
     nodes.value = await nodeDao.getAll()
   }
 
-  async function updateNodeAdmin(nodeId: string, fields: { title?: string; type?: string; detail?: string; phaseId?: number; deptId?: number }) {
+  async function updateNodeAdmin(nodeId: string, fields: { title?: string; type?: string; detail?: string; phaseId?: number; deptId?: number; isHighlighted?: boolean }) {
     await nodeDao.update(nodeId, fields)
     nodes.value = await nodeDao.getAll()
   }

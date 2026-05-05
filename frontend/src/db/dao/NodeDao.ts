@@ -25,7 +25,7 @@ export class NodeDao {
     await client.post('/nodes', { title, type, detail, phaseId, deptId });
   }
 
-  async update(nodeId: string, fields: { title?: string; type?: string; detail?: string; phaseId?: number; deptId?: number }): Promise<void> {
+  async update(nodeId: string, fields: { title?: string; type?: string; detail?: string; phaseId?: number; deptId?: number; isHighlighted?: boolean }): Promise<void> {
     await client.put(`/nodes/${nodeId}`, fields);
   }
 

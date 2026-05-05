@@ -56,6 +56,7 @@ export async function getAll() {
     phaseName: n.phase.name,
     deptId: n.deptId,
     deptName: n.department.name,
+    isHighlighted: n.isHighlighted,
   }));
 }
 
@@ -75,6 +76,7 @@ export async function getByPhase(phaseId: number) {
     phaseName: n.phase.name,
     deptId: n.deptId,
     deptName: n.department.name,
+    isHighlighted: n.isHighlighted,
   }));
 }
 
@@ -94,6 +96,7 @@ export async function getById(id: string) {
     phaseName: n.phase.name,
     deptId: n.deptId,
     deptName: n.department.name,
+    isHighlighted: n.isHighlighted,
   };
 }
 
@@ -124,7 +127,7 @@ export async function create(data: {
 
 export async function update(
   id: string,
-  fields: { title?: string; type?: string; detail?: string; phaseId?: number; deptId?: number }
+  fields: { title?: string; type?: string; detail?: string; phaseId?: number; deptId?: number; isHighlighted?: boolean }
 ) {
   return prisma.node.update({ where: { id }, data: fields });
 }

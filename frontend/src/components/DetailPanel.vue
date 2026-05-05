@@ -17,6 +17,18 @@
           />
         </div>
 
+        <!-- 重要节点标记 -->
+        <div class="detail-row">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input
+              type="checkbox"
+              :checked="activeNode.isHighlighted"
+              @change="saveHighlighted($event)"
+            />
+            <span>重要节点标记</span>
+          </label>
+        </div>
+
         <!-- 节点类型 -->
         <div class="detail-row">
           <label>节点类型</label>
@@ -262,6 +274,15 @@ function updateDept(e: Event) {
   if (activeNode.value && val !== activeNode.value.deptId) {
     flowStore.updateNodeDept(activeNode.value.id, val)
     uiStore.showToast('部门已更新并保存', 'success')
+  }
+}
+
+function saveHighlighted(e: Event) {
+  if (!activeNode.value) return
+  const val = (e.target as HTMLInputElement).checked
+  if (val !== activeNode.value.isHighlighted) {
+    flowStore.updateNodeAdmin(activeNode.value.id, { isHighlighted: val })
+    uiStore.showToast(val ? '已标记为重要节点' : '已取消重要节点标记', 'success')
   }
 }
 

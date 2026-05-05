@@ -35,6 +35,7 @@ model Node {
   phaseId   Int      @map("phase_id")
   deptId    Int      @map("dept_id")
   sortOrder Int      @default(0) @map("sort_order")
+  isHighlighted Boolean @default(false) @map("is_highlighted")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @map("updated_at")
 

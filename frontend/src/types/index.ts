@@ -20,6 +20,7 @@ export interface FlowNode {
   phaseId: number
   deptId: number
   sortOrder: number
+  isHighlighted: boolean
 }
 
 export interface FlowNodeFull extends FlowNode {

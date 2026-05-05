@@ -9,6 +9,7 @@
         dimmed: isDimmed,
         expanded: isExpanded,
         'sort-dragging': isDragging,
+        'node-highlighted': props.node.isHighlighted,
       },
     ]"
     :data-id="node.id"
@@ -155,6 +156,13 @@ async function handleDelete() {
   cursor: grabbing;
   border: 2px dashed var(--primary);
   background: #ebf8ff;
+}
+.task-node.node-highlighted {
+  box-shadow: 0 0 0 3px #f6ad55, 0 4px 12px rgba(246, 173, 85, 0.35);
+  border-color: #f6ad55;
+}
+.task-node.node-highlighted .node-title {
+  color: #c05621;
 }
 .node-delete-btn {
   position: absolute;
