@@ -195,13 +195,19 @@ watch(
   }
 )
 
-onMounted(() => {
-  updateSize()
-  observer = new ResizeObserver(updateSize)
-  if (props.canvasRef) {
-    observer.observe(props.canvasRef)
-  }
-})
+watch(
+  () => props.canvasRef,
+  (newContainer) => {
+    if (newContainer) {
+      updateSize()
+      if (!observer) {
+        observer = new ResizeObserver(updateSize)
+      }
+      observer.observe(newContainer)
+    }
+  },
+  { immediate: true }
+)
 
 onUnmounted(() => {
   observer && observer.disconnect()
