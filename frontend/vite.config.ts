@@ -5,6 +5,9 @@ import { resolve } from 'path'
 
 export default defineConfig(({ mode }) => ({
   base: mode === 'production' ? './' : '/',
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.APP_VERSION || 'dev'),
+  },
   plugins: [
     vue(),
     legacy({

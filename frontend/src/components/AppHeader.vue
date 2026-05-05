@@ -1,6 +1,6 @@
 <template>
   <div class="header">
-    <h1>内装设计全流程交互图</h1>
+    <h1>内装设计全流程交互图 <span class="version-badge">{{ appVersion }}</span></h1>
     <div class="search-box">
       <span class="search-icon">🔍</span>
       <input
@@ -159,6 +159,8 @@ function restoreDefault() {
   }
 }
 
+const appVersion = __APP_VERSION__
+
 function onDocClick(e: MouseEvent) {
   if (deptFilterRef.value && !deptFilterRef.value.contains(e.target as Node)) {
     showDeptDropdown.value = false
@@ -201,6 +203,18 @@ onUnmounted(() => {
   font-weight: 600;
   letter-spacing: 0.5px;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.version-badge {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.15);
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0;
 }
 .search-box {
   position: relative;
