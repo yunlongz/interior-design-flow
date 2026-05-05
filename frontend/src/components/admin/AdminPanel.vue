@@ -71,6 +71,46 @@
             @delete="deleteConn($event)"
           />
         </div>
+
+        <!-- 系统工具 -->
+        <div v-if="activeTab === 'tools'" class="admin-section">
+          <div class="section-header">
+            <h4>系统工具</h4>
+          </div>
+          <div class="tools-grid">
+            <div class="tool-card">
+              <div class="tool-icon">📤</div>
+              <div class="tool-title">导出数据</div>
+              <div class="tool-desc">将所有节点、阶段、部门、连接数据导出为 JSON 文件</div>
+              <button class="btn-tool" @click="exportData">立即导出</button>
+            </div>
+            <div class="tool-card">
+              <div class="tool-icon">📥</div>
+              <div class="tool-title">导入数据</div>
+              <div class="tool-desc">从 JSON 文件恢复数据（会覆盖现有数据）</div>
+              <button class="btn-tool" @click="triggerImport">选择文件</button>
+              <input
+                ref="importInput"
+                type="file"
+                accept=".json,.db"
+                style="display: none"
+                @change="handleImport"
+              />
+            </div>
+            <div class="tool-card">
+              <div class="tool-icon">🔍</div>
+              <div class="tool-title">重置视图</div>
+              <div class="tool-desc">取消节点选中状态、清除搜索、回到画布顶部</div>
+              <button class="btn-tool" @click="resetView">重置视图</button>
+            </div>
+            <div class="tool-card">
+              <div class="tool-icon">↩️</div>
+              <div class="tool-title">恢复默认</div>
+              <div class="tool-desc">恢复到系统默认的初始数据（所有自定义调整将丢失）</div>
+              <button class="btn-tool btn-danger" @click="restoreDefault">恢复默认</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -94,6 +134,8 @@ import DataTable from './DataTable.vue'
 import DataForm from './DataForm.vue'
 import client from '@/api/client.js'
 
+const importInput = ref<HTMLInputElement>()
+
 const flowStore = useFlowStore()
 const uiStore = useUiStore()
 
@@ -105,6 +147,7 @@ const tabs = [
   { key: 'departments', label: '部门管理' },
   { key: 'nodes', label: '节点管理' },
   { key: 'connections', label: '连接管理' },
+  { key: 'tools', label: '系统工具' },
 ]
 
 // 阶段表格
@@ -292,6 +335,61 @@ async function deleteConn(item: any) {
   await flowStore.removeConnection(item.id)
   uiStore.showToast('连接已删除', 'success')
 }
+
+// 系统工具
+async function exportData() {
+  try {
+    const { data } = await client.get('/db/export')
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `interior-design-flow-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    uiStore.showToast('数据已导出', 'success')
+  } catch (e) {
+    uiStore.showToast('导出失败', 'warn')
+  }
+}
+
+function triggerImport() {
+  importInput.value && importInput.value.click()
+}
+
+async function handleImport(e: Event) {
+  const files = (e.target as HTMLInputElement).files
+  const file = files && files[0]
+  if (!file) return
+  try {
+    const text = await file.text()
+    const data = JSON.parse(text)
+    await client.post('/db/import', data)
+    await flowStore.reloadAll()
+    uiStore.showToast('数据已导入', 'success')
+  } catch (err) {
+    uiStore.showToast('导入失败，文件格式错误', 'warn')
+  }
+  if (importInput.value) importInput.value.value = ''
+}
+
+function resetView() {
+  uiStore.resetView()
+  document.querySelectorAll('.task-node').forEach((node) => {
+    node.classList.remove('active', 'related', 'dimmed')
+  })
+  const wrapper = document.getElementById('canvasWrapper')
+  wrapper && wrapper.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
+  uiStore.showToast('视图已重置', 'success')
+}
+
+function restoreDefault() {
+  if (confirm('确定要恢复默认配置吗？所有自定义调整将丢失。')) {
+    flowStore.resetToDefault()
+    uiStore.resetView()
+    uiStore.showToast('已恢复默认配置', 'success')
+  }
+}
 </script>
 
 <style scoped>
@@ -404,6 +502,63 @@ async function deleteConn(item: any) {
 .close-btn:hover {
   background: #e2e8f0;
 }
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+.tool-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.15s;
+}
+.tool-card:hover {
+  border-color: var(--primary-light);
+  box-shadow: var(--shadow);
+}
+.tool-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+.tool-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.tool-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.btn-tool {
+  height: 32px;
+  padding: 0 20px;
+  border: 1px solid var(--primary-light);
+  background: #ebf4ff;
+  color: var(--primary);
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-tool:hover {
+  background: var(--primary);
+  color: white;
+}
+.btn-tool.btn-danger {
+  background: #fff5f5;
+  border-color: #fc8181;
+  color: #c53030;
+}
+.btn-tool.btn-danger:hover {
+  background: #c53030;
+  color: white;
+  border-color: #c53030;
+}
 @media (max-width: 768px) {
   .admin-panel {
     width: 100%;
@@ -429,6 +584,9 @@ async function deleteConn(item: any) {
   .admin-tab.active {
     border-left-color: transparent;
     border-bottom-color: var(--primary);
+  }
+  .tools-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

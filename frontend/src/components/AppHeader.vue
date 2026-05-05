@@ -29,17 +29,6 @@
         </div>
       </div>
       <button @click="$emit('toggleAdmin')">管理控制台</button>
-      <button @click="exportData">导出数据</button>
-      <button @click="triggerImport">导入数据</button>
-      <input
-        ref="importInput"
-        type="file"
-        accept=".db"
-        style="display: none"
-        @change="handleImport"
-      />
-      <button @click="resetView">重置视图</button>
-      <button class="danger" @click="restoreDefault">恢复默认</button>
     </div>
   </div>
 </template>
@@ -48,14 +37,12 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useUiStore } from '@/stores/uiStore'
 import { useFlowStore } from '@/stores/flowStore'
-import client from '@/api/client.js'
 
 const uiStore = useUiStore()
 const flowStore = useFlowStore()
 
 const showDeptDropdown = ref(false)
 const deptFilterRef = ref<HTMLElement>()
-const importInput = ref<HTMLInputElement>()
 
 let searchDebounce: ReturnType<typeof setTimeout> | null = null
 
@@ -103,59 +90,6 @@ function selectAllDepts(checked: boolean) {
     uiStore.setAllDeptsActive(flowStore.departments.map((d) => d.id))
   } else {
     uiStore.activeDeptIds.clear()
-  }
-}
-
-function resetView() {
-  uiStore.resetView()
-  document.querySelectorAll('.task-node').forEach((node) => {
-    node.classList.remove('active', 'related', 'dimmed')
-  })
-  const wrapper = document.getElementById('canvasWrapper')
-  wrapper && wrapper.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
-}
-
-async function exportData() {
-  try {
-    const { data } = await client.get('/db/export')
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `interior-design-flow-${new Date().toISOString().slice(0, 10)}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-    uiStore.showToast('数据已导出', 'success')
-  } catch (e) {
-    uiStore.showToast('导出失败', 'warn')
-  }
-}
-
-function triggerImport() {
-  importInput.value && importInput.value.click()
-}
-
-async function handleImport(e: Event) {
-  const files = (e.target as HTMLInputElement).files
-  const file = files && files[0]
-  if (!file) return
-  try {
-    const text = await file.text()
-    const data = JSON.parse(text)
-    await client.post('/db/import', data)
-    await flowStore.reloadAll()
-    uiStore.showToast('数据已导入', 'success')
-  } catch (err) {
-    uiStore.showToast('导入失败，文件格式错误', 'warn')
-  }
-  if (importInput.value) importInput.value.value = ''
-}
-
-function restoreDefault() {
-  if (confirm('确定要恢复默认配置吗？所有自定义调整将丢失。')) {
-    flowStore.resetToDefault()
-    uiStore.resetView()
-    uiStore.showToast('已恢复默认配置', 'success')
   }
 }
 

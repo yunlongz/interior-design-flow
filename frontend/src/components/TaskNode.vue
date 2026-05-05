@@ -158,11 +158,22 @@ async function handleDelete() {
   background: #ebf8ff;
 }
 .task-node.node-highlighted {
-  box-shadow: 0 0 0 3px #f6ad55, 0 4px 12px rgba(246, 173, 85, 0.35);
+  background: #fffaf0;
   border-color: #f6ad55;
+  box-shadow: 0 0 0 3px #f6ad55, 0 4px 16px rgba(246, 173, 85, 0.4);
 }
 .task-node.node-highlighted .node-title {
   color: #c05621;
+  font-weight: 700;
+}
+.task-node.node-highlighted .node-detail {
+  color: #9c4221;
+}
+.task-node.node-highlighted .node-detail-toggle {
+  color: #c05621;
+}
+.task-node.node-highlighted .node-type-badge {
+  box-shadow: 0 0 0 2px #fffaf0;
 }
 .node-delete-btn {
   position: absolute;
