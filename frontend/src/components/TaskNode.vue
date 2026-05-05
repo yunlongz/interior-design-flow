@@ -19,6 +19,7 @@
     @dragend="handleDragEnd"
   >
     <div class="node-type-badge"></div>
+    <button class="node-delete-btn" @click.stop="handleDelete">×</button>
     <div class="node-title">{{ node.title }}</div>
     <div v-if="node.detail && isExpanded" class="node-detail" v-html="detailHtml"></div>
     <div
@@ -93,6 +94,11 @@ function handleDragEnd() {
   isDragging.value = false
   emit('dragend')
 }
+
+async function handleDelete() {
+  if (!confirm(`确定删除节点「${props.node.title}」吗？\n相关连接关系也会被一并删除。`)) return
+  await flowStore.deleteNode(props.node.id)
+}
 </script>
 
 <style scoped>
@@ -136,6 +142,33 @@ function handleDragEnd() {
   cursor: grabbing;
   border: 2px dashed var(--primary);
   background: #ebf8ff;
+}
+.node-delete-btn {
+  position: absolute;
+  top: 4px;
+  right: 18px;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.15s;
+  z-index: 2;
+}
+.task-node:hover .node-delete-btn {
+  opacity: 1;
+}
+.node-delete-btn:hover {
+  background: #fee;
+  color: var(--accent);
 }
 .node-title {
   font-weight: 600;

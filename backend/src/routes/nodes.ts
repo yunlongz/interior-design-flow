@@ -79,4 +79,12 @@ router.post('/sort-order', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+router.patch('/:id/move', async (req, res, next) => {
+  try {
+    const { phaseId, deptId } = req.body;
+    const item = await service.moveNode(req.params.id, Number(phaseId), Number(deptId));
+    res.json(item);
+  } catch (e) { next(e); }
+});
+
 export default router;

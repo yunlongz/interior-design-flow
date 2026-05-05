@@ -72,6 +72,11 @@ export const useFlowStore = defineStore('flow', () => {
     await reloadAll()
   }
 
+  async function moveNode(nodeId: string, phaseId: number, deptId: number) {
+    await nodeDao.moveNode(nodeId, phaseId, deptId)
+    await reloadAll()
+  }
+
   async function updateNodeDetail(nodeId: string, detail: string) {
     await nodeDao.updateDetail(nodeId, detail)
     const node = nodeMap.value.get(nodeId)
@@ -163,6 +168,7 @@ export const useFlowStore = defineStore('flow', () => {
     reloadAll,
     updateNodePhase,
     updateNodeDept,
+    moveNode,
     updateNodeDetail,
     updateSortOrder,
     addConnection,

@@ -96,18 +96,23 @@ function handleWheel(e: WheelEvent) {
 
 function handleCanvasClick(e: MouseEvent) {
   const target = e.target as HTMLElement
-  if (
-    target.id === 'canvasWrapper' ||
-    target.id === 'canvas' ||
-    target.id === 'phasesContainer'
-  ) {
+  if (!target.closest('.task-node')) {
     uiStore.setActiveNode(null)
   }
 }
 
 async function handleDrop(phaseId: number, deptId: number, ids: string[]) {
+  if (!dragSrcId.value) return
+  const srcNode = flowStore.nodeMap.get(dragSrcId.value)
+  if (!srcNode) return
+  // 跨阶段或跨部门时先移动节点
+  if (srcNode.phaseId !== phaseId || srcNode.deptId !== deptId) {
+    await flowStore.moveNode(dragSrcId.value, phaseId, deptId)
+  }
+  // 更新目标位置的排序
   await flowStore.updateSortOrder(phaseId, deptId, ids)
-  uiStore.showToast('顺序已调整并保存', 'success')
+  dragSrcId.value = null
+  uiStore.showToast('位置已调整并保存', 'success')
 }
 
 onMounted(async () => {

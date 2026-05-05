@@ -104,7 +104,7 @@ const paths = computed(() => {
     let stroke = '#a0aec0'
     let strokeWidth = 1.5
     let markerEnd = 'url(#arrow)'
-    let className = 'visible'
+    let className = activeId ? 'visible' : ''
 
     if (isHighlighted) {
       stroke = '#c53030'

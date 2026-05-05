@@ -164,3 +164,22 @@ export async function getMaxSortOrder(phaseId: number, deptId: number) {
   });
   return result._max.sortOrder || 0;
 }
+
+export async function moveNode(
+  id: string,
+  phaseId: number,
+  deptId: number
+) {
+  const maxSort = await prisma.node.aggregate({
+    where: { phaseId, deptId },
+    _max: { sortOrder: true },
+  });
+  return prisma.node.update({
+    where: { id },
+    data: {
+      phaseId,
+      deptId,
+      sortOrder: (maxSort._max.sortOrder || 0) + 1,
+    },
+  });
+}

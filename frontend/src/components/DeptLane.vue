@@ -6,7 +6,10 @@
   >
     <div class="dept-label" @click="uiStore.toggleDeptCollapse(phaseId, deptId)">
       <span>{{ deptName }}</span>
-      <span class="dept-toggle">▼</span>
+      <span class="dept-actions">
+        <button class="add-btn-inline" @click.stop="showAddForm = true" title="添加节点">+</button>
+        <span class="dept-toggle">▼</span>
+      </span>
     </div>
     <div
       class="lane-tasks"
@@ -22,12 +25,31 @@
         @dragstart="$emit('dragstart', $event)"
         @dragend="$emit('dragend')"
       />
+      <div v-if="showAddForm" class="add-node-card" @click.stop>
+        <input
+          v-model="newNodeTitle"
+          placeholder="节点名称"
+          @keyup.enter="confirmAdd"
+          ref="addInputRef"
+        />
+        <select v-model="newNodeType">
+          <option value="task">任务</option>
+          <option value="review">评审/汇报</option>
+          <option value="deliverable">交付物</option>
+          <option value="decision">决策</option>
+          <option value="milestone">里程碑</option>
+        </select>
+        <div class="add-actions">
+          <button class="btn-confirm" @click="confirmAdd">添加</button>
+          <button class="btn-cancel" @click="showAddForm = false">取消</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 import type { FlowNodeFull } from '@/types'
 import { useUiStore } from '@/stores/uiStore'
 import { useFlowStore } from '@/stores/flowStore'
@@ -50,10 +72,33 @@ const uiStore = useUiStore()
 const flowStore = useFlowStore()
 
 const isDragOver = ref(false)
+const showAddForm = ref(false)
+const newNodeTitle = ref('')
+const newNodeType = ref('task')
+const addInputRef = ref<HTMLInputElement>()
+
+watch(showAddForm, (val) => {
+  if (val) {
+    newNodeTitle.value = ''
+    newNodeType.value = 'task'
+    nextTick(() => addInputRef.value && addInputRef.value.focus())
+  }
+})
 
 const isCollapsed = computed(() => {
   return uiStore.collapsedDeptKeys.has(`${props.phaseId}-${props.deptId}`)
 })
+
+async function confirmAdd() {
+  const title = newNodeTitle.value.trim()
+  if (!title) {
+    uiStore.showToast('请输入节点名称', 'warn')
+    return
+  }
+  await flowStore.createNode(title, newNodeType.value, '', props.phaseId, props.deptId)
+  showAddForm.value = false
+  uiStore.showToast('节点已添加', 'success')
+}
 
 function handleDragOver(e: DragEvent) {
   e.preventDefault()
@@ -61,10 +106,6 @@ function handleDragOver(e: DragEvent) {
   if (!srcId) return
   const srcNode = flowStore.nodeMap.get(srcId)
   if (!srcNode) return
-  if (srcNode.phaseId !== props.phaseId || srcNode.deptId !== props.deptId) {
-    isDragOver.value = false
-    return
-  }
   isDragOver.value = true
 
   const container = e.currentTarget as HTMLElement
@@ -83,13 +124,6 @@ function handleDrop(e: DragEvent) {
   isDragOver.value = false
   const srcId = e.dataTransfer && e.dataTransfer.getData('text/plain')
   if (!srcId) return
-  const srcNode = flowStore.nodeMap.get(srcId)
-  if (!srcNode) return
-  if (srcNode.phaseId !== props.phaseId || srcNode.deptId !== props.deptId) {
-    uiStore.showToast('仅支持同部门内排序', 'warn')
-    flowStore.reloadAll()
-    return
-  }
   const container = e.currentTarget as HTMLElement
   const ids = Array.from(container.querySelectorAll('.task-node')).map(
     (el) => (el as HTMLElement).dataset.id!
@@ -152,6 +186,33 @@ function getDragAfterElement(container: HTMLElement, x: number, y: number) {
   background: #e2e8f0;
   color: var(--primary);
 }
+.dept-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.add-btn-inline {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: none;
+  background: var(--primary-light);
+  color: white;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.dept-label:hover .add-btn-inline {
+  opacity: 1;
+}
+.add-btn-inline:hover {
+  background: var(--primary);
+}
 .dept-toggle {
   font-size: 10px;
   transition: transform 0.2s;
@@ -173,6 +234,60 @@ function getDragAfterElement(container: HTMLElement, x: number, y: number) {
 .lane-tasks.drag-over {
   background: #ebf8ff;
   box-shadow: inset 0 0 0 2px var(--primary-light);
+}
+.add-node-card {
+  background: white;
+  border: 1px dashed var(--primary-light);
+  border-radius: 6px;
+  padding: 8px;
+  min-width: 160px;
+  max-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.add-node-card input {
+  width: 100%;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 6px;
+  font-size: 12px;
+  outline: none;
+}
+.add-node-card input:focus {
+  border-color: var(--primary);
+}
+.add-node-card select {
+  width: 100%;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 4px;
+  font-size: 12px;
+  outline: none;
+  background: white;
+}
+.add-actions {
+  display: flex;
+  gap: 6px;
+}
+.add-actions button {
+  flex: 1;
+  height: 26px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: white;
+  font-size: 11px;
+  cursor: pointer;
+}
+.add-actions .btn-confirm {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+.add-actions .btn-confirm:hover {
+  background: var(--primary-light);
 }
 @media (max-width: 768px) {
   .dept-lane {
