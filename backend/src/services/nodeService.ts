@@ -25,16 +25,29 @@ function getPinyinFirst(name: string): string {
 async function generateId(phaseId: number, deptId: number): Promise<string> {
   const dept = await prisma.department.findUnique({ where: { id: deptId } });
   const deptCode = dept ? getPinyinFirst(dept.name) : 'x';
+  const prefix = `${deptCode}${phaseId}_`;
+
+  // 全局查询所有以该前缀开头的 ID，避免遗漏其他 phase/dept 下的残留数据
   const nodes = await prisma.node.findMany({
-    where: { phaseId, deptId },
+    where: { id: { startsWith: prefix } },
     select: { id: true },
   });
+
   let maxSeq = 0;
   for (const n of nodes) {
     const match = n.id.match(/_(\d+)$/);
     if (match) maxSeq = Math.max(maxSeq, parseInt(match[1]));
   }
-  return `${deptCode}${phaseId}_${maxSeq + 1}`;
+
+  // 重试机制：应对并发创建时的竞态条件
+  for (let i = 1; i <= 10; i++) {
+    const candidate = `${prefix}${maxSeq + i}`;
+    const existing = await prisma.node.findUnique({ where: { id: candidate } });
+    if (!existing) return candidate;
+  }
+
+  // 兜底：使用时间戳确保唯一性
+  return `${prefix}${Date.now()}`;
 }
 
 export async function getAll() {

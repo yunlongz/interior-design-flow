@@ -1,7 +1,7 @@
 <template>
   <div class="header">
     <div class="header-brand">
-      <img src="/logo.svg" alt="麓湖" class="header-logo" />
+      <img src="/logo.png" alt="麓湖" class="header-logo" />
       <h1>内装设计全流程交互图 <span class="version-badge">{{ appVersion }}</span></h1>
     </div>
     <div class="search-box">
