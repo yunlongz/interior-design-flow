@@ -8,8 +8,13 @@
       <div class="detail-panel-body">
         <!-- 节点名称 -->
         <div class="detail-row">
-          <label>节点名称</label>
-          <div class="value" style="font-size: 15px; font-weight: 600">{{ activeNode.title }}</div>
+          <label>节点名称 <span class="edit-badge">可编辑</span></label>
+          <input
+            :value="activeNode.title"
+            @blur="saveTitle($event)"
+            @keyup.enter="($event.target as HTMLInputElement).blur()"
+            style="font-size: 15px; font-weight: 600"
+          />
         </div>
 
         <!-- 节点类型 -->
@@ -232,6 +237,15 @@ function saveDetail() {
   if (detailText.value !== activeNode.value.detail) {
     flowStore.updateNodeDetail(activeNode.value.id, detailText.value)
     detailSaved.value = true
+  }
+}
+
+function saveTitle(e: Event) {
+  if (!activeNode.value) return
+  const newTitle = (e.target as HTMLInputElement).value.trim()
+  if (newTitle && newTitle !== activeNode.value.title) {
+    flowStore.updateNodeAdmin(activeNode.value.id, { title: newTitle })
+    uiStore.showToast('节点名称已更新', 'success')
   }
 }
 

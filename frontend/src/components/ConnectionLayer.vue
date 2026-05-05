@@ -51,8 +51,10 @@ const uiStore = useUiStore()
 const canvasSize = ref({ width: 0, height: 0 })
 const hoveredIdx = ref<number | null>(null)
 const tooltip = ref({ show: false, x: 0, y: 0, type: '', desc: '' })
+const renderTick = ref(0)
 
 const paths = computed(() => {
+  renderTick.value // establish dependency for DOM-update-triggered recompute
   const activeId = uiStore.activeNodeId
   const container = props.canvasRef
   if (!container) return []
@@ -178,6 +180,15 @@ watch(
     nextTick(updateSize)
   },
   { deep: true }
+)
+
+watch(
+  () => uiStore.activeNodeId,
+  () => {
+    nextTick(() => {
+      renderTick.value++
+    })
+  }
 )
 
 onMounted(() => {

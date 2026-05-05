@@ -169,15 +169,6 @@ function onDocClick(e: MouseEvent) {
 
 onMounted(() => {
   document.addEventListener('click', onDocClick)
-  // Initialize only "内装方案团队" as active
-  if (uiStore.activeDeptIds.size === 0) {
-    const targetDept = flowStore.departments.find((d) => d.name === '内装方案团队')
-    if (targetDept) {
-      uiStore.setAllDeptsActive([targetDept.id])
-    } else {
-      uiStore.setAllDeptsActive(flowStore.departments.map((d) => d.id))
-    }
-  }
 })
 
 onUnmounted(() => {

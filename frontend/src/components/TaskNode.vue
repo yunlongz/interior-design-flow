@@ -88,11 +88,13 @@ function handleDragStart(e: DragEvent) {
   emit('dragstart', props.node.id)
   e.dataTransfer!.effectAllowed = 'move'
   e.dataTransfer!.setData('text/plain', props.node.id)
+  document.body.dataset.dragSrcId = props.node.id
 }
 
 function handleDragEnd() {
   isDragging.value = false
   emit('dragend')
+  delete document.body.dataset.dragSrcId
 }
 
 async function handleDelete() {

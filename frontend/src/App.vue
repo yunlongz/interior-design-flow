@@ -45,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useFlowStore } from '@/stores/flowStore'
 import { useUiStore } from '@/stores/uiStore'
 import AppHeader from './components/AppHeader.vue'
@@ -102,22 +102,31 @@ function handleCanvasClick(e: MouseEvent) {
 }
 
 async function handleDrop(phaseId: number, deptId: number, ids: string[]) {
-  if (!dragSrcId.value) return
-  const srcNode = flowStore.nodeMap.get(dragSrcId.value)
+  const srcId = dragSrcId.value || document.body.dataset.dragSrcId || null
+  if (!srcId) return
+  const srcNode = flowStore.nodeMap.get(srcId)
   if (!srcNode) return
   // 跨阶段或跨部门时先移动节点
   if (srcNode.phaseId !== phaseId || srcNode.deptId !== deptId) {
-    await flowStore.moveNode(dragSrcId.value, phaseId, deptId)
+    await flowStore.moveNode(srcId, phaseId, deptId)
   }
   // 更新目标位置的排序
   await flowStore.updateSortOrder(phaseId, deptId, ids)
   dragSrcId.value = null
+  delete document.body.dataset.dragSrcId
   uiStore.showToast('位置已调整并保存', 'success')
 }
 
 onMounted(async () => {
   try {
     await flowStore.init()
+    // 初始化完成后，默认只显示「内装方案团队」
+    if (uiStore.activeDeptIds.size === 0) {
+      const targetDept = flowStore.departments.find((d) => d.name === '内装方案团队')
+      if (targetDept) {
+        uiStore.setAllDeptsActive([targetDept.id])
+      }
+    }
   } catch (err: any) {
     loadError.value = (err && err.message) || '数据库初始化失败'
     console.error('App init error:', err)

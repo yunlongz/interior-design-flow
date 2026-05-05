@@ -102,7 +102,7 @@ async function confirmAdd() {
 
 function handleDragOver(e: DragEvent) {
   e.preventDefault()
-  const srcId = e.dataTransfer && e.dataTransfer.getData('text/plain')
+  const srcId = (e.dataTransfer && e.dataTransfer.getData('text/plain')) || document.body.dataset.dragSrcId
   if (!srcId) return
   const srcNode = flowStore.nodeMap.get(srcId)
   if (!srcNode) return
@@ -122,7 +122,7 @@ function handleDragOver(e: DragEvent) {
 function handleDrop(e: DragEvent) {
   e.preventDefault()
   isDragOver.value = false
-  const srcId = e.dataTransfer && e.dataTransfer.getData('text/plain')
+  const srcId = (e.dataTransfer && e.dataTransfer.getData('text/plain')) || document.body.dataset.dragSrcId
   if (!srcId) return
   const container = e.currentTarget as HTMLElement
   const ids = Array.from(container.querySelectorAll('.task-node')).map(
