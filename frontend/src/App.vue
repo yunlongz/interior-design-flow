@@ -27,7 +27,6 @@
     </div>
     <LegendBar />
     <ZoomControls />
-    <MiniMap />
     <AdminPanel v-model:show="showAdmin" />
     <ToastMessage />
   </div>
@@ -56,7 +55,6 @@ import ConnectionLayer from './components/ConnectionLayer.vue'
 import DetailPanel from './components/DetailPanel.vue'
 import LegendBar from './components/LegendBar.vue'
 import ZoomControls from './components/ZoomControls.vue'
-import MiniMap from './components/MiniMap.vue'
 import ToastMessage from './components/ToastMessage.vue'
 
 const flowStore = useFlowStore()

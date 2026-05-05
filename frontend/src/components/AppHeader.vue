@@ -1,6 +1,9 @@
 <template>
   <div class="header">
-    <h1>内装设计全流程交互图 <span class="version-badge">{{ appVersion }}</span></h1>
+    <div class="header-brand">
+      <img src="/logo.svg" alt="麓湖" class="header-logo" />
+      <h1>内装设计全流程交互图 <span class="version-badge">{{ appVersion }}</span></h1>
+    </div>
     <div class="search-box">
       <span class="search-icon">🔍</span>
       <input
@@ -122,6 +125,16 @@ onUnmounted(() => {
   flex-shrink: 0;
   z-index: 100;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.header-logo {
+  height: 28px;
+  width: auto;
+  flex-shrink: 0;
 }
 .header h1 {
   font-size: 18px;

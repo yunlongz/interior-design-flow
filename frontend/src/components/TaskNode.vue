@@ -30,6 +30,9 @@
     >
       ▼
     </div>
+    <div v-if="node.detail" class="node-tooltip">
+      <div class="tooltip-content" v-html="detailHtml"></div>
+    </div>
   </div>
 </template>
 
@@ -248,12 +251,47 @@ async function handleDelete() {
 }
 
 .type-task .node-type-badge { background: var(--primary); }
-.type-review { border-left: 3px solid var(--review); }
 .type-review .node-type-badge { background: var(--review); }
-.type-deliverable { border-left: 3px solid var(--deliverable); }
 .type-deliverable .node-type-badge { background: var(--deliverable); }
-.type-decision { border-left: 3px solid var(--decision); }
 .type-decision .node-type-badge { background: var(--decision); }
-.type-milestone { border-left: 3px solid var(--milestone); }
 .type-milestone .node-type-badge { background: var(--milestone); }
+
+/* Hover tooltip */
+.node-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s, visibility 0.15s;
+  pointer-events: none;
+  max-width: 280px;
+  min-width: 160px;
+}
+.task-node:hover .node-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+.tooltip-content {
+  background: rgba(30, 41, 59, 0.95);
+  color: #f1f5f9;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 10px 14px;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.tooltip-content::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(30, 41, 59, 0.95);
+}
 </style>
