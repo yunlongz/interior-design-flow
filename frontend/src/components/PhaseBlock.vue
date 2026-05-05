@@ -49,7 +49,8 @@ const isCollapsed = computed(() => uiStore.collapsedPhaseIds.has(props.phase.id)
 
 const deptIds = computed(() => {
   const ids = flowStore.phaseDeptMap.get(props.phase.id)
-  return ids ? Array.from(ids) as number[] : []
+  if (!ids) return []
+  return Array.from(ids).filter((id) => uiStore.activeDeptIds.has(id)) as number[]
 })
 
 const deptCount = computed(() => deptIds.value.length)
