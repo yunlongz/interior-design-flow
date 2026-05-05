@@ -19,8 +19,6 @@
         v-for="node in nodes"
         :key="node.id"
         :node="node"
-        @dragstart="$emit('dragstart', $event)"
-        @dragend="$emit('dragend')"
       />
       <div v-if="showAddForm" class="add-node-card" @click.stop>
         <input

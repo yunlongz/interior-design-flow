@@ -8,7 +8,7 @@ WORKDIR /app
 
 # 复制依赖文件并安装
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 # 复制源码并构建
 COPY . .
