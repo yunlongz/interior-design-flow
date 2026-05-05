@@ -31,10 +31,7 @@ services:
       - db
 
   frontend:
-    build:
-      context: ./frontend
-      args:
-        APP_VERSION: ${APP_VERSION:-dev}
+    build: ./frontend
     container_name: idf-frontend
     ports:
       - "18080:80"

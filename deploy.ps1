@@ -4,7 +4,7 @@
     Deploy idf stack via Portainer API.
 
 .DESCRIPTION
-    Reads $env:PORTAINER_TOKEN, triggers Pull & Redeploy on Portainer.
+    Reads $env:PORTAINER_TOKEN, auto-deletes old containers/images, then triggers Pull & Redeploy.
     Set token first: $env:PORTAINER_TOKEN = "your-token"
 
 .EXAMPLE
@@ -35,7 +35,7 @@ $baseUrl = "$PortainerUrl/api"
 $headers = @{ "X-API-Key" = $token }
 
 # --- 3. Find stack ---
-Write-Host "[1/4] Finding stack '$StackName'..." -ForegroundColor Cyan
+Write-Host "[1/5] Finding stack '$StackName'..." -ForegroundColor Cyan
 try {
     $stacks = Invoke-RestMethod -Uri "$baseUrl/stacks" -Headers $headers -Method GET -ErrorAction Stop
 } catch {
@@ -50,10 +50,52 @@ if (-not $stack) {
     exit 1
 }
 
-Write-Host "        Found: $StackName (ID=$($stack.Id), Endpoint=$($stack.EndpointId))" -ForegroundColor Green
+$endpointId = $stack.EndpointId
+Write-Host "        Found: $StackName (ID=$($stack.Id), Endpoint=$endpointId)" -ForegroundColor Green
 
-# --- 4. Trigger redeploy ---
-Write-Host "[2/4] Triggering git redeploy..." -ForegroundColor Cyan
+# --- 4. Delete old containers & images ---
+Write-Host "[2/5] Cleaning old containers & images..." -ForegroundColor Cyan
+
+# Delete containers
+try {
+    $containers = Invoke-RestMethod -Uri "$baseUrl/endpoints/$endpointId/docker/containers/json?all=true" -Headers $headers -Method GET
+    $targetContainers = $containers | Where-Object { $_.Names | ForEach-Object { $_ -match 'idf-(backend|frontend)' } }
+    foreach ($c in $targetContainers) {
+        $name = ($c.Names[0] -replace '^/', '')
+        try {
+            if ($c.State -eq "running") {
+                Invoke-RestMethod -Uri "$baseUrl/endpoints/$endpointId/docker/containers/$($c.Id)/stop" -Headers $headers -Method POST -ErrorAction Stop | Out-Null
+                Write-Host "        Stopped $name" -ForegroundColor Gray
+            }
+            Invoke-RestMethod -Uri "$baseUrl/endpoints/$endpointId/docker/containers/$($c.Id)?force=true" -Headers $headers -Method DELETE -ErrorAction Stop | Out-Null
+            Write-Host "        Deleted container $name" -ForegroundColor Gray
+        } catch {
+            Write-Host "        [WARN] Failed to delete container $name : $_" -ForegroundColor Yellow
+        }
+    }
+} catch {
+    Write-Host "        [WARN] Container cleanup failed: $_" -ForegroundColor Yellow
+}
+
+# Delete images
+try {
+    $images = Invoke-RestMethod -Uri "$baseUrl/endpoints/$endpointId/docker/images/json" -Headers $headers -Method GET
+    $targetImages = $images | Where-Object { $_.RepoTags -and ($_.RepoTags | ForEach-Object { $_ -match 'idf-(backend|frontend)' }) }
+    foreach ($img in $targetImages) {
+        $tag = $img.RepoTags[0]
+        try {
+            Invoke-RestMethod -Uri "$baseUrl/endpoints/$endpointId/docker/images/$($img.Id)?force=true" -Headers $headers -Method DELETE -ErrorAction Stop | Out-Null
+            Write-Host "        Deleted image $tag" -ForegroundColor Gray
+        } catch {
+            Write-Host "        [WARN] Failed to delete image $tag : $_" -ForegroundColor Yellow
+        }
+    }
+} catch {
+    Write-Host "        [WARN] Image cleanup failed: $_" -ForegroundColor Yellow
+}
+
+# --- 5. Trigger redeploy ---
+Write-Host "[3/5] Triggering git redeploy..." -ForegroundColor Cyan
 $body = (@{
     env                     = @()
     prune                   = $false
@@ -78,14 +120,14 @@ try {
     exit 1
 }
 
-# --- 5. Poll container status ---
-Write-Host "[3/4] Waiting for containers... (interval=${PollInterval}s, max=$MaxPollAttempts)" -ForegroundColor Cyan
+# --- 6. Poll container status ---
+Write-Host "[4/5] Waiting for containers... (interval=${PollInterval}s, max=$MaxPollAttempts)" -ForegroundColor Cyan
 
 for ($i = 1; $i -le $MaxPollAttempts; $i++) {
     Start-Sleep -Seconds $PollInterval
 
     try {
-        $containers = Invoke-RestMethod -Uri "$baseUrl/endpoints/$($stack.EndpointId)/docker/containers/json?all=true" -Headers $headers -Method GET
+        $containers = Invoke-RestMethod -Uri "$baseUrl/endpoints/$endpointId/docker/containers/json?all=true" -Headers $headers -Method GET
         $idfContainers = $containers | Where-Object { $_.Names | ForEach-Object { $_ -like "*idf*" } }
 
         $running = @($idfContainers | Where-Object { $_.State -eq "running" })
@@ -103,7 +145,7 @@ for ($i = 1; $i -le $MaxPollAttempts; $i++) {
                 $name = ($c.Names[0] -replace '^/', '')
                 Write-Host "              OK  $name  ($($c.Status))" -ForegroundColor Gray
             }
-            Write-Host "[4/4] Deploy complete! Visit http://192.168.131.32" -ForegroundColor Green
+            Write-Host "[5/5] Deploy complete! Visit http://192.168.131.32" -ForegroundColor Green
             exit 0
         }
 

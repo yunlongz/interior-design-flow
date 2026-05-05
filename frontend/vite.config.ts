@@ -2,11 +2,14 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import legacy from '@vitejs/plugin-legacy'
 import { resolve } from 'path'
+import { readFileSync } from 'fs'
+
+const pkg = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf-8'))
 
 export default defineConfig(({ mode }) => ({
   base: mode === 'production' ? './' : '/',
   define: {
-    __APP_VERSION__: JSON.stringify(process.env.APP_VERSION || 'dev'),
+    __APP_VERSION__: JSON.stringify(pkg.version),
   },
   plugins: [
     vue(),

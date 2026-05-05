@@ -1,9 +1,6 @@
 # 阶段一：构建
 FROM docker.m.daocloud.io/library/node:22-alpine AS builder
 
-ARG APP_VERSION=dev
-ENV APP_VERSION=${APP_VERSION}
-
 WORKDIR /app
 
 # 复制依赖文件并安装
